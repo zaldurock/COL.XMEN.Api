@@ -2,6 +2,7 @@ using COL.XMEN.Core.DTO;
 using COL.XMEN.Infraestructure.CosmosDB;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -62,6 +63,53 @@ namespace COL.XMEN.Application.Test
             //assert
             var result = await Assert.ThrowsAsync<Exception>(async () => await handleTask);
         }
-        
+
+
+        [Fact]
+        public async Task StatsMutantTests_Human0_SuccessFul()
+        {
+            //arrange
+            fakeRepository.Setup(x => x.Where("isMutant = true"))
+                  .Returns(Task.FromResult<IEnumerable<Mutant>>(new List<Mutant>()
+                          {
+                              new Mutant{ isMutant = true}
+                          }));
+
+            fakeRepository.Setup(x => x.Where("isMutant = false"))
+                  .Returns(Task.FromResult<IEnumerable<Mutant>>(new List<Mutant>()));
+
+            var mutantservice = new MutantService(fakeRepository.Object);
+
+            //act
+            var result = await mutantservice.StatsMutant();
+
+            //assert
+            Assert.Equal(1, result.ratio);
+        }
+
+        [Fact]
+        public async Task StatsMutantTests_HumanAndMutantEquals_Ratio1()
+        {
+            //arrange
+            fakeRepository.Setup(x => x.Where("isMutant = true"))
+                  .Returns(Task.FromResult<IEnumerable<Mutant>>(new List<Mutant>()
+                          {
+                              new Mutant{ isMutant = true}
+                          }));
+
+            fakeRepository.Setup(x => x.Where("isMutant = false"))
+                   .Returns(Task.FromResult<IEnumerable<Mutant>>(new List<Mutant>()
+                          {
+                              new Mutant{ isMutant = true}
+                          }));
+
+            var mutantservice = new MutantService(fakeRepository.Object);
+
+            //act
+            var result = await mutantservice.StatsMutant();
+
+            //assert
+            Assert.Equal(1, result.ratio);
+        }
     }
 }
